@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
@@ -55,7 +56,7 @@ builder.Services.AddAuthentication(opt =>
     })
     .AddJwtBearer(jwt =>
     {
-        var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection("JwtSettings:SecretKey").Value ??
+        var key = Encoding.ASCII.GetBytes(configuration.GetSection("JwtSettings:SecretKey").Value ??
                                           string.Empty);
         jwt.SaveToken = true;
         jwt.EventsType = typeof(CustomJwtBearerEvents);
@@ -68,6 +69,11 @@ builder.Services.AddAuthentication(opt =>
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
+    })
+    .AddGoogle(googleOptions =>
+    {
+        googleOptions.ClientId = configuration.GetSection("Authentication:Google:ClientId").Value ?? string.Empty;
+        googleOptions.ClientSecret = configuration.GetSection("Authentication:Google:ClientSecret").Value ?? string.Empty;
     });
 
 

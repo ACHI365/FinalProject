@@ -22,12 +22,20 @@ public class AuthService : IAuthService
         _jwtSettings = jwtSettings.Value;
     }
 
+    // private string GenerateVerificationCode()
+    // {
+    //     const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    //     var random = new Random();
+    //     var code = new string(Enumerable.Repeat(chars, 6)
+    //         .Select(s => s[random.Next(s.Length)]).ToArray());
+    //     return code;
+    // }
+
     public async Task<Result<User>> CreateUserAsync(UserDto userDto)
     {
         try
         {
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email);
-
             if (existingUser != null)
             {
                 if (existingUser.RegistrationMethod is "Google" or "GitHub")
@@ -46,10 +54,13 @@ public class AuthService : IAuthService
             }
 
             User user = MapDto(userDto);
+            // var verificationCode = GenerateVerificationCode();
+            // user.VerificationCode = verificationCode;
             _context.Users.Add(user);
             var result = await _context.SaveChangesAsync();
             if (result == 0)
                 return Result<User>.Fail("A user with the same email already exists.");
+            // await SendVerificationEmail(user.Email, verificationCode);
             return Result<User>.Success(user);
         }
         catch (DbUpdateException ex)
@@ -57,6 +68,9 @@ public class AuthService : IAuthService
             return Result<User>.Fail("A user with the same email already exists.");
         }
     }
+    
+    // private async Task SendVerificationEmail(string userEmail, string verificationCode)
+    // { }
 
     public async Task<Result<User?>> AuthenticateAsync(LogInDto logInDto)
     {
@@ -107,7 +121,6 @@ public class AuthService : IAuthService
             PasswordHash = HashPassword(userDto.Password),
             Email = userDto.Email,
             Role = Role.User,
-            RegistrationMethod = userDto.RegistrationMethod
         };
         return user;
     }

@@ -22,7 +22,8 @@ public class DataContext : DbContext
                 UserName = "admin",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin"), 
                 Email = "constant@example.com",
-                Role = Role.Admin
+                Role = Role.Admin,
+                IsVerified = true
             }
         );
     }
