@@ -353,5 +353,4 @@ public class ReviewController : ControllerBase
     {
         return Ok(await _dbContext.Comments.Where(c => c.ReviewId == reviewId).ToListAsync());
     }
-    
 }

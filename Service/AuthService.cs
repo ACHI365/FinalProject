@@ -42,6 +42,7 @@ public class AuthService : IAuthService
     public async Task<Result<User?>> AuthenticateAsync(LogInDto logInDto)
     {
         var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == logInDto.Email);
+        if (user == null) return Result<User?>.Fail("User does not exist");
         await _context.SaveChangesAsync();
         return Result<User?>.Success(user);
     }
@@ -51,8 +52,23 @@ public class AuthService : IAuthService
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
-        var claims = PopulateArr(user);
-        return GetTokenHandler(claims, securityKey, credentials);
+        Console.WriteLine("COMEOAJSDOPSAJPASDPASJDOPASJDOPIASJDOAJDSOAIPDJASOD");
+        Console.WriteLine(user);       
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role.ToString())
+        };
+        
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(int.Parse(_jwtSettings.ExpirationInMinutes)),
+            signingCredentials: credentials
+        );
+        var tokenHandler = new JwtSecurityTokenHandler();
+        return tokenHandler.WriteToken(token);
     }
     
     private Claim[] PopulateArr(User user)

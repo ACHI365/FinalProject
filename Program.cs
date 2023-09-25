@@ -31,7 +31,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -74,13 +74,7 @@ builder.Services.AddAuthentication(opt =>
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
-    })
-    .AddGoogle(googleOptions =>
-    {
-        googleOptions.ClientId = configuration.GetSection("Authentication:Google:ClientId").Value ?? string.Empty;
-        googleOptions.ClientSecret = configuration.GetSection("Authentication:Google:ClientSecret").Value ?? string.Empty;
     });
-
 
 var app = builder.Build();
 
@@ -94,14 +88,11 @@ if (app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();
-// app.UseDefaultFiles();
-// app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-// app.MapHub<GameHub>("/gameHub");
 app.MapControllers();
 
 app.Run();
