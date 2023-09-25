@@ -10,6 +10,8 @@ public class DataContext : DbContext
     public DbSet<Piece> Pieces { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Like> Likes { get; set; }
+    public DbSet<Rating> Ratings { get; set; }
+    public DbSet<Comment> Comments { get; set; }
     public DbSet<ReviewTag> ReviewTags { get; set; }
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
@@ -50,6 +52,18 @@ public class DataContext : DbContext
             .HasOne(l => l.Review)
             .WithMany(r => r.Likes)
             .HasForeignKey(l => l.ReviewId)
+            .OnDelete(DeleteBehavior.Restrict); 
+        
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.User)
+            .WithMany(u => u.Comments)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Restrict); 
+
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Review)
+            .WithMany(r => r.Comments)
+            .HasForeignKey(c => c.ReviewId)
             .OnDelete(DeleteBehavior.Restrict); 
     }
 }

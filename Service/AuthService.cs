@@ -29,9 +29,7 @@ public class AuthService : IAuthService
         {
             User user = MapDto(userDto);
             _context.Users.Add(user);
-            var result = await _context.SaveChangesAsync();
-            if (result == 0)
-                return Result<User>.Fail("A user with the same email already exists.");
+            await _context.SaveChangesAsync();
             return Result<User>.Success(user);
         }
         catch (DbUpdateException ex)
@@ -53,13 +51,23 @@ public class AuthService : IAuthService
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
-        var claims = new[]
+        var claims = PopulateArr(user);
+        return GetTokenHandler(claims, securityKey, credentials);
+    }
+    
+    private Claim[] PopulateArr(User user)
+    {
+        return new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Role, user.Role.ToString())
         };
+    }
+
+    private string GetTokenHandler(Claim[] claims, SymmetricSecurityKey securityKey, SigningCredentials credentials)
+    {
         var token = new JwtSecurityToken(
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(int.Parse(_jwtSettings.ExpirationInMinutes)),
@@ -68,7 +76,6 @@ public class AuthService : IAuthService
         var tokenHandler = new JwtSecurityTokenHandler();
         return tokenHandler.WriteToken(token);
     }
-
 
     private User MapDto(UserDto userDto)
     {
@@ -81,5 +88,4 @@ public class AuthService : IAuthService
         };
         return user;
     }
-
 }

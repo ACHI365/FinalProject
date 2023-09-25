@@ -23,25 +23,11 @@ public class TagController : ControllerBase
         return Ok(tags);
     }
     
-    [HttpGet("suggest/{partialTagName}")]
-    public IActionResult SuggestTags(string partialTagName)
-    {
-        // Fetch tag suggestions based on the partial tag name
-        var suggestions = _dbContext.Tags
-            .Where(tag => tag.Name.Contains(partialTagName))
-            .Select(tag => tag.Name)
-            .ToList();
-
-        return Ok(suggestions);
-    }
-
     [HttpPost]
-    // [Authorize(Roles = "Admin")]
+    [Authorize]
     public IActionResult CreateTag([FromBody] Tag tag)
     {
-        // Check if the tag already exists
         var existingTag = _dbContext.Tags.FirstOrDefault(t => t.Name.Equals(tag.Name, StringComparison.OrdinalIgnoreCase));
-
         if (existingTag != null)
         {
             existingTag.Amount++;
@@ -49,7 +35,6 @@ public class TagController : ControllerBase
             _dbContext.SaveChanges();
             return Ok("Tag already exists.");
         }
-
         _dbContext.Tags.Add(tag);
         _dbContext.SaveChanges();
         return Ok("Tag created successfully");
@@ -63,7 +48,6 @@ public class TagController : ControllerBase
         {
             return NotFound("Tag not found.");
         }
-
         return Ok(tag);
     }
 }

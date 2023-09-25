@@ -18,14 +18,14 @@ public class ReviewController : ControllerBase
     private readonly DataContext _dbContext;
     private readonly IReviewService _reviewService;
 
-    public ReviewController(DataContext dbContext, IReviewService reviewService)
+    public ReviewController(DataContext dbContext, IReviewService reviewService, IAuthService authService)
     {
         _reviewService = reviewService;
         _dbContext = dbContext;
     }
 
     [HttpPost("create-review")]
-    // [Authorize(Roles = "Admin,User")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> CreateReview([FromBody] ReviewCreateDto model)
     {
         var user = await _dbContext.Users.FindAsync(model.UserId);
@@ -33,10 +33,10 @@ public class ReviewController : ControllerBase
 
         Console.WriteLine(model.UserId);
         Console.WriteLine(model.PieceId);
-        
+
         if (user == null || piece == null)
             return BadRequest("Invalid user or piece.");
-    
+
         var review = new Review
         {
             ReviewName = model.ReviewName,
@@ -46,7 +46,7 @@ public class ReviewController : ControllerBase
             CreationTime = DateTime.Now,
             Piece = piece,
             User = user,
-            ImageUrl = "image"
+            ImageUrl = model.ImageUrl
         };
 
         foreach (var tagName in model.TagNames)
@@ -55,20 +55,17 @@ public class ReviewController : ControllerBase
 
             if (existingTag == null)
             {
-                // If tag doesn't exist, create it
-                existingTag = new Tag { Name = tagName, Amount = 1 }; // You might need to set the amount appropriately
+                existingTag = new Tag { Name = tagName, Amount = 1 };
                 _dbContext.Tags.Add(existingTag);
             }
             else
             {
                 existingTag.Amount++;
             }
-
-            // Associate the tag with the review
             var reviewTag = new ReviewTag { Review = review, Tag = existingTag };
             review.ReviewTags.Add(reviewTag);
         }
-        
+
         user.Reviews.Add(review);
         piece.Reviews.Add((review));
         _dbContext.Reviews.Add(review);
@@ -76,7 +73,7 @@ public class ReviewController : ControllerBase
 
         return Ok("Review created successfully");
     }
-    
+
     [HttpGet("review-tags/{reviewId}")]
     public async Task<IActionResult> GetTagsForReview(int reviewId)
     {
@@ -92,7 +89,7 @@ public class ReviewController : ControllerBase
 
         return Ok(tags);
     }
-    
+
     [HttpPut("edit-review/{reviewId}")]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> EditReview(int reviewId, [FromBody] ReviewEditDto model)
@@ -129,13 +126,16 @@ public class ReviewController : ControllerBase
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Console.WriteLine(userIdClaim);
+        Console.WriteLine("I AM");
         if (int.TryParse(userIdClaim, out var userId))
         {
             return userId;
         }
-        return -1; 
+
+        return -1;
     }
-    
+
     [Authorize(Roles = "Admin,User")]
     [HttpDelete("delete-review/{reviewId}")]
     public async Task<IActionResult> DeleteReview(int reviewId)
@@ -157,8 +157,7 @@ public class ReviewController : ControllerBase
 
         return Forbid("You are not authorized to delete this review.");
     }
-    
-    // [Authorize(Roles = "Admin,User")]
+
     [HttpGet("get-review/{reviewId}")]
     public async Task<IActionResult> GetReview(int reviewId)
     {
@@ -171,9 +170,8 @@ public class ReviewController : ControllerBase
 
         return Ok(review);
     }
-    
+
     [HttpGet("get-all-reviews")]
-    // [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetAllReviews()
     {
         var reviews = await _dbContext.Reviews.ToListAsync();
@@ -190,7 +188,7 @@ public class ReviewController : ControllerBase
         return Ok(reviews);
     }
 
-    
+
     [HttpGet("get-review-by-user/{userId}")]
     public async Task<IActionResult> GetReviewsByUser(int userId)
     {
@@ -201,7 +199,7 @@ public class ReviewController : ControllerBase
         return Ok(reviews);
     }
 
-    
+
     [HttpGet("get-review-by-piece/{pieceId}")]
     public async Task<IActionResult> GetReviewsByPiece(int pieceId)
     {
@@ -211,7 +209,7 @@ public class ReviewController : ControllerBase
 
         return Ok(reviews);
     }
-    
+
     [HttpGet("get-review-by-id/{reviewId}")]
     public async Task<IActionResult> GetReviewById(int reviewId)
     {
@@ -219,7 +217,7 @@ public class ReviewController : ControllerBase
         return Ok(reviews);
     }
 
-    
+
     [HttpGet("get-review-by-group/{group}")]
     public async Task<IActionResult> GetReviewsByGroup(Group group)
     {
@@ -229,8 +227,8 @@ public class ReviewController : ControllerBase
 
         return Ok(reviews);
     }
-    
-    [HttpPost("{reviewId}/like")]
+
+    [HttpPost("like/{reviewId}")]
     [Authorize]
     public async Task<IActionResult> LikeReview(int reviewId)
     {
@@ -253,14 +251,32 @@ public class ReviewController : ControllerBase
             ReviewId = reviewId,
             UserId = currentUserId
         };
-
+        Console.WriteLine("USER " + currentUserId + "like " + reviewId);
         _dbContext.Likes.Add(like);
         await _dbContext.SaveChangesAsync();
 
         return Ok("Review liked successfully");
     }
 
-    [HttpPost("{reviewId}/unlike")]
+    [HttpGet("likestatus/{reviewId}")]
+    [Authorize]
+    public async Task<ActionResult<bool>> CheckLikeStatus(int reviewId)
+    {
+        var currentUserId = GetCurrentUserId();
+
+        var review = await _dbContext.Reviews
+            .Include(r => r.Likes)
+            .FirstOrDefaultAsync(r => r.ReviewId == reviewId);
+
+        if (review == null)
+            return NotFound();
+
+        bool hasLiked = review.Likes.Any(like => like.UserId == currentUserId);
+
+        return Ok(hasLiked);
+    }
+
+    [HttpPost("unlike/{reviewId}")]
     [Authorize]
     public async Task<IActionResult> UnlikeReview(int reviewId)
     {
@@ -272,8 +288,9 @@ public class ReviewController : ControllerBase
         }
 
         var currentUserId = GetCurrentUserId();
-        
-        var like = review.Likes.FirstOrDefault(l => l.UserId == currentUserId);
+
+        var like = _dbContext.Likes.FirstOrDefault(l => l.UserId == currentUserId && l.ReviewId == reviewId);
+
         if (like == null)
         {
             return BadRequest("You have not liked this review.");
@@ -283,6 +300,58 @@ public class ReviewController : ControllerBase
         await _dbContext.SaveChangesAsync();
 
         return Ok("Review unliked successfully");
+    }
+    
+    [HttpGet("likeCount/{reviewId}")]
+    [Authorize]
+    public IActionResult GetUniqueLikeCountForReview(int reviewId)
+    {
+        try
+        {
+            var uniqueUserLikesCount = _dbContext.Likes
+                .Where(like => like.ReviewId == reviewId)
+                .Select(like => like.UserId)
+                .Distinct() 
+                .Count();   
+
+            return Ok(uniqueUserLikesCount);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+    
+    [HttpPost("add-comment")]
+    [Authorize]
+    public async Task<IActionResult> AddComment([FromBody] CommentDto commentDto)
+    {
+        var review = await _dbContext.Reviews.FindAsync(commentDto.reviewId);
+
+        if (review == null)
+        {
+            return NotFound("Review not found.");
+        }
+
+        var currentUserId = GetCurrentUserId();
+        
+        var comment = new Comment()
+        {
+            Author = (await _dbContext.Users.FindAsync(currentUserId)).UserName,
+            Content = commentDto.context,
+            UserId = currentUserId,
+            ReviewId = commentDto.reviewId
+        };
+        _dbContext.Comments.Add(comment);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok("Review liked successfully");
+    }
+    
+    [HttpGet("get-comments/{reviewId}")]
+    public async Task<IActionResult> getComments(int reviewId)
+    {
+        return Ok(await _dbContext.Comments.Where(c => c.ReviewId == reviewId).ToListAsync());
     }
     
 }

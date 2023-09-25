@@ -28,5 +28,6 @@ namespace FinalProject.Model
 
         public List<Like> Likes { get; set; } = new List<Like>();
         public List<ReviewTag> ReviewTags { get; set; } = new List<ReviewTag>();
+        public ICollection<Comment> Comments { get; set; }
     }
 }

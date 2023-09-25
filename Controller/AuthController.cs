@@ -30,17 +30,11 @@ namespace FinalProject.Controller
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LogInDto loginDto)
         {
-            Console.WriteLine("HEY");
             var result = await _authService.AuthenticateAsync(loginDto);
             if (!result.IsSuccess) return Unauthorized(new { errorMessage = result.ErrorMessage });
             var token = _authService.GenerateJwtToken(result.Data);
-            var responseData = new
-            {
-                Token = token,
-                Result = result 
-            };
+            var responseData = new { Token = token, Result = result };
             return Ok(responseData);
         }
-        
     }
 }

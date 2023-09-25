@@ -25,43 +25,4 @@ public class UserService : IUserService
     {
         return await _context.Users.SingleOrDefaultAsync(u => u.UserId == userId);
     }
-    //
-    // public async Task<Result<bool>> BlockUserAsync(List<int> userIds)
-    // {
-    //     foreach (var userId in userIds)
-    //     {
-    //         var user = await _context.Users.FindAsync(userId);
-    //         if (user == null)
-    //             return Result<bool>.Fail("User not found.");
-    //         user.Block();
-    //     }
-    //     await _context.SaveChangesAsync();
-    //     return Result<bool>.Success(true);
-    // }
-    //
-    // public async Task<Result<bool>> UnblockUserAsync(List<int> userIds)
-    // {
-    //     foreach (var userId in userIds)
-    //     {
-    //         var user = await _context.Users.FindAsync(userId);
-    //         if (user == null)
-    //             return Result<bool>.Fail("User not found.");
-    //         user.Unblock();
-    //     }
-    //     await _context.SaveChangesAsync();
-    //     return Result<bool>.Success(true);
-    // }
-    //
-    // public async Task<Result<bool>> DeleteUserAsync(List<int> userIds)
-    // {
-    //     foreach (var userId in userIds)
-    //     {
-    //         var user = await _context.Users.FindAsync(userId);
-    //         if (user == null)
-    //             return Result<bool>.Fail("User not found.");
-    //         _context.Users.Remove(user);
-    //     }
-    //     await _context.SaveChangesAsync();
-    //     return Result<bool>.Success(true);
-    // }
 }

@@ -8,7 +8,6 @@ namespace FinalProject.Controller
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -17,7 +16,8 @@ namespace FinalProject.Controller
         {
             _userService = userService;
         }
-
+        
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("user-management")]
         public async Task<IActionResult> GetUserManagement()
         {
@@ -30,35 +30,5 @@ namespace FinalProject.Controller
         {
             return Ok(await _userService.GetUserById(userId));
         }
-
-        // [HttpPut("block-user")]
-        // public async Task<IActionResult> BlockUser([FromBody] List<int> userIds)
-        // {
-        //     var result = await _userService.BlockUserAsync(userIds);
-        //     if (result.IsSuccess)
-        //         return Ok(result);
-        //
-        //     return BadRequest(result);
-        // }
-        //
-        // [HttpPut("unblock-user")]
-        // public async Task<IActionResult> UnblockUser([FromBody] List<int> userIds)
-        // {
-        //     var result = await _userService.UnblockUserAsync(userIds);
-        //     if (result.IsSuccess)
-        //         return Ok(result);
-        //
-        //     return BadRequest(result);
-        // }
-        //
-        // [HttpDelete("delete-user")]
-        // public async Task<IActionResult> DeleteUser([FromBody] List<int> userIds)
-        // {
-        //     var result = await _userService.DeleteUserAsync(userIds);
-        //     if (result.IsSuccess)
-        //         return Ok(result);
-        //
-        //     return BadRequest(result);
-        // }
     }
 }

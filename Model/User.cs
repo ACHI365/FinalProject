@@ -12,7 +12,8 @@ public class User
     [Required] [MaxLength(256)] public string UserName { get; set; } = string.Empty;
     [Required] [EmailAddress] public string Email { get; set; } = string.Empty;
     [Required] public Role Role { get; set; }
-    
     public List<Like> Likes { get; set; } = new List<Like>();
     public List<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<Comment> Comments { get; set; }
+
 }

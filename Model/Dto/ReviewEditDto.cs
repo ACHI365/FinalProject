@@ -6,5 +6,4 @@ public class ReviewEditDto
     public Group Group { get; set; }
     public string ReviewText { get; set; }
     public double Grade { get; set; }
-    // public string ImageUrl { get; set; }
 }

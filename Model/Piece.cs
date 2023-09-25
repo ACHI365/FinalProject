@@ -11,6 +11,6 @@ public class Piece
     public string Name { get; set; }
     public Group Group { get; set; }
     public double AverageRating { get; set; }
-
+    public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     public List<Review> Reviews { get; set; } = new List<Review>();
 }

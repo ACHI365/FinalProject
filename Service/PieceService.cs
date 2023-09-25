@@ -19,7 +19,7 @@ public class PieceService : IPieceService
     {
         return await _context.Pieces.ToListAsync();
     }
-    
+
     public async Task<IEnumerable<Piece>> GetAllPiecesByGroup(int group)
     {
         return await _context.Pieces.Where(p => (int)(p.Group) == group).ToListAsync();
@@ -28,14 +28,10 @@ public class PieceService : IPieceService
     public async Task<Result<Piece?>> CreatePiece(PieceDto pieceDto)
     {
         string normalizedPieceName = pieceDto.Name.ToLower();
-
-        Piece? pieceExist = await _context.Pieces
-            .FirstOrDefaultAsync(p => p.Name.ToLower() == normalizedPieceName && p.Group == pieceDto.Group);
-
+        Piece? pieceExist = await _context.Pieces.FirstOrDefaultAsync(p =>
+            p.Name.ToLower() == normalizedPieceName && p.Group == pieceDto.Group);
         if (pieceExist != null)
             return Result<Piece>.Success(pieceExist);
-
-
         try
         {
             Piece piece = MapDto(pieceDto);
@@ -57,7 +53,7 @@ public class PieceService : IPieceService
         if (piece != null) return Result<Piece>.Success(piece);
         return Result<Piece>.Fail("Piece with such name does not exist");
     }
-    
+
     public async Task<Result<Piece>> GetPieceById(int pieceId)
     {
         Piece? piece = await _context.Pieces.SingleOrDefaultAsync(u => u!.PieceId == pieceId);
