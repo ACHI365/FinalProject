@@ -1,7 +1,7 @@
 ﻿using FinalProject.Model;
 using FinalProject.Model.Dto;
 
-namespace FinalProject.Service;
+namespace FinalProject.Service.ServiceInterface;
 
 public interface IAuthService
 {

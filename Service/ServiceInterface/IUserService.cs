@@ -1,6 +1,6 @@
 ﻿using FinalProject.Model;
 
-namespace FinalProject.Service;
+namespace FinalProject.Service.ServiceInterface;
 
 public interface IUserService
 {

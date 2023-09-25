@@ -1,8 +1,7 @@
 ﻿using AdminPanel.Config;
 using FinalProject.Data;
 using FinalProject.Model;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+using FinalProject.Service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -24,7 +23,7 @@ public class UserService : IUserService
 
     public async Task<User?> GetUserById(int userId)
     {
-        return await _context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+        return await _context.Users.SingleOrDefaultAsync(u => u.UserId == userId);
     }
     //
     // public async Task<Result<bool>> BlockUserAsync(List<int> userIds)

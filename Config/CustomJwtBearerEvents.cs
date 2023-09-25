@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using FinalProject.Service;
+using FinalProject.Service.ServiceInterface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace AdminPanel.Config;

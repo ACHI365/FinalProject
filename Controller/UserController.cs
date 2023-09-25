@@ -1,4 +1,5 @@
 ﻿using FinalProject.Service;
+using FinalProject.Service.ServiceInterface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ namespace FinalProject.Controller
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -17,14 +18,14 @@ namespace FinalProject.Controller
             _userService = userService;
         }
 
-        [HttpGet("user-management"), Authorize(Roles = "Admin")]
+        [HttpGet("user-management")]
         public async Task<IActionResult> GetUserManagement()
         {
             var users = await _userService.GetAllUsersAsync();
             return Ok(users);
         }
 
-        [HttpGet("get/{userId:int}"), Authorize(Roles = "User,Admin")]
+        [HttpGet("get/{userId:int}")]
         public async Task<IActionResult> GetUserById(int userId)
         {
             return Ok(await _userService.GetUserById(userId));

@@ -13,6 +13,6 @@ public class Result<T>
         Data = data;
     }
 
-    public static Result<T> Success(T data) => new Result<T>(true, null!, data);
+    public static Result<T?> Success(T data) => new Result<T>(true, null!, data);
     public static Result<T> Fail(string errorMessage) => new Result<T>(false, errorMessage, default!);
 }

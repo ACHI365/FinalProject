@@ -2,6 +2,7 @@ using System.Text;
 using AdminPanel.Config;
 using FinalProject.Data;
 using FinalProject.Service;
+using FinalProject.Service.ServiceInterface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -45,6 +46,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IPieceService, PieceService>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<CustomJwtBearerEvents>();
 
