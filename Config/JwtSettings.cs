@@ -1,4 +1,4 @@
-﻿namespace AdminPanel.Config;
+﻿namespace FinalProject.Config;
 
 public class JwtSettings
 {

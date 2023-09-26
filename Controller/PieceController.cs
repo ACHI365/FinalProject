@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Claims;
 using FinalProject.Data;
 using FinalProject.Model;
 using FinalProject.Model.Dto;
@@ -39,13 +40,8 @@ namespace FinalProject.Controller
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Console.WriteLine(userIdClaim);
-            Console.WriteLine("I AM");
             if (int.TryParse(userIdClaim, out var userId))
-            {
                 return userId;
-            }
-
             return -1;
         }
 
@@ -53,8 +49,7 @@ namespace FinalProject.Controller
         [Authorize(Roles = "Admin, User")]
         public async Task<IActionResult> CreatePiece([FromBody] PieceDto? piece)
         {
-            Console.WriteLine("HERE");
-            var result = await _pieceService.CreatePiece(piece);
+            var result = await _pieceService.CreatePiece(piece!);
             if (result.IsSuccess)
                 return Ok(result.Data);
             return BadRequest(new { errorMessage = result.ErrorMessage });
@@ -83,37 +78,9 @@ namespace FinalProject.Controller
         public async Task<IActionResult> RatePiece(int pieceId, int score)
         {
             var userId = GetCurrentUserId();  
-
             var piece = await _dataContext.Pieces.FindAsync(pieceId);
-            if (piece == null)
-            {
-                return NotFound("Piece not found.");
-            }
-
-            var existingRating = await _dataContext.Ratings.FirstOrDefaultAsync(r => r.PieceId == pieceId && r.UserId == userId);
-            if (existingRating != null)
-            {
-                existingRating.Score = score;
-                existingRating.DateRated = DateTime.Now;
-                _dataContext.Ratings.Update(existingRating);
-            }
-            else
-            {
-                var newRating = new Rating
-                {
-                    PieceId = pieceId,
-                    UserId = userId,
-                    Score = score,
-                    DateRated = DateTime.Now
-                };
-
-                _dataContext.Ratings.Add(newRating);
-            }
-            await _dataContext.SaveChangesAsync();
-            var ratings = await _dataContext.Ratings.Where(r => r.PieceId == pieceId).Select(r => r.Score).ToListAsync();
-            piece.AverageRating = ratings.Count > 0 ? ratings.Average() : 0;
-            _dataContext.Pieces.Update(piece);
-            await _dataContext.SaveChangesAsync();
+            if (piece == null) return NotFound("Piece not found.");
+            _pieceService.RatePiece(piece, score, userId);
             return Ok("Piece rated successfully");
         }
 
@@ -122,13 +89,8 @@ namespace FinalProject.Controller
         public async Task<IActionResult> GetRating(int pieceId)
         {
             var userId = GetCurrentUserId();  
-
             var rating = await _dataContext.Ratings.FirstOrDefaultAsync(r => r.PieceId == pieceId && r.UserId == userId);
-            if (rating == null)
-            {
-                return NotFound("Rating not found.");
-            }
-
+            if (rating == null) return NotFound("Rating not found.");
             return Ok(rating.Score);
         }
         

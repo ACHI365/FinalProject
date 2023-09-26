@@ -11,7 +11,6 @@ namespace FinalProject.Model
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ReviewId { get; set; }
-
         public string ReviewName { get; set; }
         public Group Group { get; set; }
         public string ReviewText { get; set; }
@@ -19,13 +18,10 @@ namespace FinalProject.Model
         public DateTime CreationTime { get; set; } 
         public string ImageUrl { get; set; }
         public double ReviewScore { get; set; }
-
         public int UserId { get; set; }
         public User User { get; set; }
-
         public int PieceId { get; set; }
         public Piece Piece { get; set; }
-
         public List<Like> Likes { get; set; } = new List<Like>();
         public List<ReviewTag> ReviewTags { get; set; } = new List<ReviewTag>();
         public ICollection<Comment> Comments { get; set; }

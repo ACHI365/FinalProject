@@ -1,4 +1,4 @@
-﻿using AdminPanel.Config;
+﻿using FinalProject.Config;
 using FinalProject.Data;
 using FinalProject.Model;
 using FinalProject.Service.ServiceInterface;

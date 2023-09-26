@@ -30,13 +30,8 @@ public class ReviewController : ControllerBase
     {
         var user = await _dbContext.Users.FindAsync(model.UserId);
         var piece = await _dbContext.Pieces.FindAsync(model.PieceId);
-
-        Console.WriteLine(model.UserId);
-        Console.WriteLine(model.PieceId);
-
         if (user == null || piece == null)
             return BadRequest("Invalid user or piece.");
-
         var review = new Review
         {
             ReviewName = model.ReviewName,
@@ -52,25 +47,19 @@ public class ReviewController : ControllerBase
         foreach (var tagName in model.TagNames)
         {
             var existingTag = await _dbContext.Tags.FirstOrDefaultAsync(t => t.Name.ToLower() == tagName.ToLower());
-
             if (existingTag == null)
             {
                 existingTag = new Tag { Name = tagName, Amount = 1 };
                 _dbContext.Tags.Add(existingTag);
             }
-            else
-            {
-                existingTag.Amount++;
-            }
+            else existingTag.Amount++;
             var reviewTag = new ReviewTag { Review = review, Tag = existingTag };
             review.ReviewTags.Add(reviewTag);
         }
-
         user.Reviews.Add(review);
         piece.Reviews.Add((review));
         _dbContext.Reviews.Add(review);
         await _dbContext.SaveChangesAsync();
-
         return Ok("Review created successfully");
     }
 
@@ -81,12 +70,9 @@ public class ReviewController : ControllerBase
             .Include(r => r.ReviewTags)
             .ThenInclude(rt => rt.Tag)
             .FirstOrDefaultAsync(r => r.ReviewId == reviewId);
-
         if (review == null)
             return NotFound();
-
         var tags = review.ReviewTags.Select(rt => rt.Tag.Name);
-
         return Ok(tags);
     }
 
@@ -95,25 +81,17 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> EditReview(int reviewId, [FromBody] ReviewEditDto model)
     {
         var review = await _dbContext.Reviews.FindAsync(reviewId);
-
-        if (review == null)
-        {
-            return NotFound("Review not found.");
-        }
-
+        if (review == null) return NotFound("Review not found.");
         if (User.IsInRole("Admin") || CurrentUserIsReviewAuthor(review))
         {
             review.ReviewName = model.ReviewName;
             review.Group = model.Group;
             review.ReviewText = model.ReviewText;
             review.Grade = model.Grade;
-
             _dbContext.Reviews.Update(review);
             await _dbContext.SaveChangesAsync();
-
             return Ok("Review updated successfully");
         }
-
         return Forbid("You are not authorized to edit this review.");
     }
 
@@ -126,13 +104,10 @@ public class ReviewController : ControllerBase
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        Console.WriteLine(userIdClaim);
-        Console.WriteLine("I AM");
         if (int.TryParse(userIdClaim, out var userId))
         {
             return userId;
         }
-
         return -1;
     }
 
@@ -141,20 +116,13 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> DeleteReview(int reviewId)
     {
         var review = await _dbContext.Reviews.FindAsync(reviewId);
-
-        if (review == null)
-        {
-            return NotFound("Review not found.");
-        }
-
+        if (review == null) return NotFound("Review not found.");
         if (User.IsInRole("Admin") || CurrentUserIsReviewAuthor(review))
         {
             _dbContext.Reviews.Remove(review);
             await _dbContext.SaveChangesAsync();
-
             return Ok("Review deleted successfully");
         }
-
         return Forbid("You are not authorized to delete this review.");
     }
 
@@ -162,12 +130,7 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> GetReview(int reviewId)
     {
         var review = await _dbContext.Reviews.FindAsync(reviewId);
-
-        if (review == null)
-        {
-            return NotFound("Review not found.");
-        }
-
+        if (review == null) return NotFound("Review not found.");
         return Ok(review);
     }
 
@@ -184,7 +147,6 @@ public class ReviewController : ControllerBase
         var reviews = await _dbContext.Reviews
             .Where(r => r.ReviewTags.Any(rt => rt.Tag.Name == tagName))
             .ToListAsync();
-
         return Ok(reviews);
     }
 
@@ -195,7 +157,6 @@ public class ReviewController : ControllerBase
         var reviews = await _dbContext.Reviews
             .Where(r => r.User.UserId == userId)
             .ToListAsync();
-
         return Ok(reviews);
     }
 
@@ -206,7 +167,6 @@ public class ReviewController : ControllerBase
         var reviews = await _dbContext.Reviews
             .Where(r => r.Piece.PieceId == pieceId)
             .ToListAsync();
-
         return Ok(reviews);
     }
 
@@ -224,7 +184,6 @@ public class ReviewController : ControllerBase
         var reviews = await _dbContext.Reviews
             .Where(r => r.Group == group)
             .ToListAsync();
-
         return Ok(reviews);
     }
 
@@ -233,28 +192,16 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> LikeReview(int reviewId)
     {
         var review = await _dbContext.Reviews.FindAsync(reviewId);
-
-        if (review == null)
-        {
-            return NotFound("Review not found.");
-        }
-
+        if (review == null) return NotFound("Review not found.");
         var currentUserId = GetCurrentUserId();
-
-        if (review.Likes.Any(like => like.UserId == currentUserId))
-        {
-            return BadRequest("You have already liked this review.");
-        }
-
+        if (review.Likes.Any(like => like.UserId == currentUserId)) return BadRequest("You have already liked this review.");
         var like = new Like
         {
             ReviewId = reviewId,
             UserId = currentUserId
         };
-        Console.WriteLine("USER " + currentUserId + "like " + reviewId);
         _dbContext.Likes.Add(like);
         await _dbContext.SaveChangesAsync();
-
         return Ok("Review liked successfully");
     }
 
@@ -263,16 +210,12 @@ public class ReviewController : ControllerBase
     public async Task<ActionResult<bool>> CheckLikeStatus(int reviewId)
     {
         var currentUserId = GetCurrentUserId();
-
         var review = await _dbContext.Reviews
             .Include(r => r.Likes)
             .FirstOrDefaultAsync(r => r.ReviewId == reviewId);
-
         if (review == null)
             return NotFound();
-
         bool hasLiked = review.Likes.Any(like => like.UserId == currentUserId);
-
         return Ok(hasLiked);
     }
 
@@ -281,24 +224,12 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> UnlikeReview(int reviewId)
     {
         var review = await _dbContext.Reviews.FindAsync(reviewId);
-
-        if (review == null)
-        {
-            return NotFound("Review not found.");
-        }
-
+        if (review == null) return NotFound("Review not found.");
         var currentUserId = GetCurrentUserId();
-
         var like = _dbContext.Likes.FirstOrDefault(l => l.UserId == currentUserId && l.ReviewId == reviewId);
-
-        if (like == null)
-        {
-            return BadRequest("You have not liked this review.");
-        }
-
+        if (like == null) return BadRequest("You have not liked this review.");
         _dbContext.Likes.Remove(like);
         await _dbContext.SaveChangesAsync();
-
         return Ok("Review unliked successfully");
     }
     
@@ -313,7 +244,6 @@ public class ReviewController : ControllerBase
                 .Select(like => like.UserId)
                 .Distinct() 
                 .Count();   
-
             return Ok(uniqueUserLikesCount);
         }
         catch (Exception ex)
@@ -327,14 +257,8 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> AddComment([FromBody] CommentDto commentDto)
     {
         var review = await _dbContext.Reviews.FindAsync(commentDto.reviewId);
-
-        if (review == null)
-        {
-            return NotFound("Review not found.");
-        }
-
+        if (review == null) return NotFound("Review not found.");
         var currentUserId = GetCurrentUserId();
-        
         var comment = new Comment()
         {
             Author = (await _dbContext.Users.FindAsync(currentUserId)).UserName,

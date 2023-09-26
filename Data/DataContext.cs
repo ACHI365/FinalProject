@@ -13,6 +13,7 @@ public class DataContext : DbContext
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<Comment> Comments { get; set; }
     public DbSet<ReviewTag> ReviewTags { get; set; }
+    
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
     }

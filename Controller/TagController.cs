@@ -1,4 +1,5 @@
-﻿using FinalProject.Data;
+﻿using System.Diagnostics.CodeAnalysis;
+using FinalProject.Data;
 using FinalProject.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -10,4 +10,5 @@ public interface IPieceService
     Task<Result<Piece>> GetPieceByName(string pieceName);
     Task<Result<Piece>> GetPieceById(int pieceId);
     Task<IEnumerable<Piece>> GetAllPiecesByGroup(int group);
+    void RatePiece(Piece piece, int score, int userId);
 }

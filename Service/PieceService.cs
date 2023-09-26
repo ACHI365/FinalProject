@@ -1,4 +1,5 @@
-﻿using FinalProject.Data;
+﻿using System.Diagnostics.CodeAnalysis;
+using FinalProject.Data;
 using FinalProject.Model;
 using FinalProject.Model.Dto;
 using FinalProject.Service.ServiceInterface;
@@ -59,6 +60,45 @@ public class PieceService : IPieceService
         Piece? piece = await _context.Pieces.SingleOrDefaultAsync(u => u!.PieceId == pieceId);
         if (piece != null) return Result<Piece>.Success(piece);
         return Result<Piece>.Fail("Piece with such name does not exist");
+    }
+
+    public async void RatePiece(Piece piece, int score, int userId)
+    {
+        var existingRating =
+            await _context.Ratings.FirstOrDefaultAsync(r => r.PieceId == piece.PieceId && r.UserId == userId);
+        if (existingRating != null)
+            RateUpdate(existingRating, score);
+        else
+            CreateRating(score, piece, userId);
+        UpdateRatings(piece, score);
+    }
+
+    private async void UpdateRatings(Piece piece, int score)
+    {
+        var ratings = await _context.Ratings.Where(r => r.PieceId == piece.PieceId).Select(r => r.Score).ToListAsync();
+        ratings.Add(score);
+        piece.AverageRating = ratings.Count > 0 ? ratings.Average() : 0;
+        _context.Pieces.Update(piece);
+        await _context.SaveChangesAsync();
+    }
+
+    private void RateUpdate(Rating existingRating, int score)
+    {
+        existingRating.Score = score;
+        existingRating.DateRated = DateTime.Now;
+        _context.Ratings.Update(existingRating);
+    }
+
+    private void CreateRating(int score, Piece piece, int userId)
+    {
+        Rating newRating = new Rating
+        {
+            PieceId = piece.PieceId,
+            UserId = userId,
+            Score = score,
+            DateRated = DateTime.Now
+        };
+        _context.Ratings.Add(newRating);
     }
 
     private Piece MapDto(PieceDto pieceDto)
