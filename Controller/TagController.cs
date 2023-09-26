@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using FinalProject.Data;
 using FinalProject.Model;
+using FinalProject.Service.ServiceInterface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,44 +12,33 @@ namespace FinalProject.Controller;
 public class TagController : ControllerBase
 {
     private readonly DataContext _dbContext;
+    private readonly ITagService _tagService;
 
-    public TagController(DataContext dbContext)
+    public TagController(DataContext dbContext, ITagService tagService)
     {
+        _tagService = tagService;
         _dbContext = dbContext;
     }
 
     [HttpGet("get-all")]
     public IActionResult GetAllTags()
     {
-        var tags = _dbContext.Tags.ToList();
+        var tags = _tagService.GetAllTagsAsync();
         return Ok(tags);
     }
     
     [HttpPost]
     [Authorize]
-    public IActionResult CreateTag([FromBody] Tag tag)
+    public IActionResult CreateTag([FromBody] Tag? tag)
     {
-        var existingTag = _dbContext.Tags.FirstOrDefault(t => t.Name.Equals(tag.Name, StringComparison.OrdinalIgnoreCase));
-        if (existingTag != null)
-        {
-            existingTag.Amount++;
-            _dbContext.Tags.Update(existingTag);
-            _dbContext.SaveChanges();
-            return Ok("Tag already exists.");
-        }
-        _dbContext.Tags.Add(tag);
-        _dbContext.SaveChanges();
-        return Ok("Tag created successfully");
+        var newTag = _tagService.CreateTag(tag);
+        return newTag.Result ? Ok("Tag created successfully") : Ok("Tag already exists");
     }
 
     [HttpGet("{tagName}")]
     public IActionResult GetTagByName(string tagName)
     {
-        var tag = _dbContext.Tags.FirstOrDefault(t => t.Name.Equals(tagName, StringComparison.OrdinalIgnoreCase));
-        if (tag == null)
-        {
-            return NotFound("Tag not found.");
-        }
-        return Ok(tag);
+        var tag = _tagService.GetTagByName(tagName);
+        return tag.Result == null ? NotFound("Tag does not exists") : Ok(tag);
     }
 }

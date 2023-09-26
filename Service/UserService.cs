@@ -11,7 +11,7 @@ public class UserService : IUserService
 {
     private readonly DataContext _context;
 
-    public UserService(DataContext context, IOptions<JwtSettings> jwtSettings)
+    public UserService(DataContext context)
     {
         _context = context;
     }

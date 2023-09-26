@@ -28,18 +28,15 @@ public class PieceService : IPieceService
 
     public async Task<Result<Piece?>> CreatePiece(PieceDto pieceDto)
     {
-        string normalizedPieceName = pieceDto.Name.ToLower();
-        Piece? pieceExist = await _context.Pieces.FirstOrDefaultAsync(p =>
-            p.Name.ToLower() == normalizedPieceName && p.Group == pieceDto.Group);
-        if (pieceExist != null)
-            return Result<Piece>.Success(pieceExist);
+        var pieceResult = GetPieceByName(pieceDto.Name).Result;
+        if (pieceResult.IsSuccess)
+            return Result<Piece>.Success(pieceResult.Data);
         try
         {
             Piece piece = MapDto(pieceDto);
             _context.Pieces.Add(piece);
             var result = await _context.SaveChangesAsync();
-            if (result == 0)
-                return Result<Piece?>.Fail("A piece with the same name already exists.");
+            if (result == 0) return Result<Piece?>.Fail("A piece with the same name already exists.");
             return Result<Piece?>.Success(piece);
         }
         catch (DbUpdateException ex)

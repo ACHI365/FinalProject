@@ -273,7 +273,7 @@ public class ReviewController : ControllerBase
     }
     
     [HttpGet("get-comments/{reviewId}")]
-    public async Task<IActionResult> getComments(int reviewId)
+    public async Task<IActionResult> GetComments(int reviewId)
     {
         return Ok(await _dbContext.Comments.Where(c => c.ReviewId == reviewId).ToListAsync());
     }
